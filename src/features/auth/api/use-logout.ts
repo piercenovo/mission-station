@@ -1,6 +1,7 @@
+import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 
-import { InferRequestType, InferResponseType } from "hono";
+import { InferResponseType } from "hono";
 
 import { client } from "@/lib/rpc";
 import { useRouter } from "next/navigation";
@@ -14,11 +15,20 @@ export const useLogout = () => {
   const mutation = useMutation<ResponseType, Error>({
     mutationFn: async () => {
       const response = await client.api.auth.logout["$post"]();
+
+      if (!response.ok) {
+        throw new Error("Error al desconectarse");
+      }
+
       return await response.json();
     },
     onSuccess: () => {
+      toast.success("Estás desconectado");
       router.refresh();
       queryClient.invalidateQueries({ queryKey: ["current"] });
+    },
+    onError: () => {
+      toast.success("Error al desconectarse");
     },
   });
 
