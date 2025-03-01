@@ -11,9 +11,17 @@ import {
   SelectItem,
 } from "@/components/ui/select";
 import { WorkspaceAvatar } from "@/features/workspaces/components/workspace-avatar";
+import { useRouter } from "next/navigation";
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 export const WorkspaceSwitcher = () => {
+  const workspaceId = useWorkspaceId();
+  const router = useRouter();
   const { data: workspaces } = useGetWorkspaces();
+
+  const onSelect = (id: string) => {
+    router.push(`/workspaces/${id}`);
+  };
 
   return (
     <div className="flex flex-col gap-y-2">
@@ -23,7 +31,7 @@ export const WorkspaceSwitcher = () => {
         </p>
         <RiAddCircleFill className="size-6 text-neutral-500 cursor-pointer hover:opacity-75 transition" />
       </div>
-      <Select>
+      <Select onValueChange={onSelect} value={workspaceId}>
         <SelectTrigger className="w-full bg-neutral-200 font-medium px-2 py-1.5">
           <SelectValue placeholder="No se ha seleccionado" />
         </SelectTrigger>
