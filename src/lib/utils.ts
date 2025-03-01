@@ -17,3 +17,9 @@ export function generateInviteCode(length: number) {
 
   return result;
 }
+
+export const extractFileIdFromUrl = (url: string): string => {
+  const urlObj = new URL(url);
+  const pathParts = urlObj.pathname.split("/");
+  return pathParts[pathParts.length - 2]; // Extrae el fileId correctamente
+};
