@@ -2,6 +2,7 @@
 
 import { z } from "zod";
 import Image from "next/image";
+import { useRouter } from "next/navigation";
 import { useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -28,6 +29,7 @@ interface CreateWorkspaceFormProps {
 }
 
 export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
+  const router = useRouter();
   const { mutate, isPending } = useCreateWorkspace();
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -48,9 +50,9 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     mutate(
       { form: finalValues },
       {
-        onSuccess: () => {
+        onSuccess: ({ data }) => {
           form.reset();
-          //   TODO: Redireccionar al nuevo espacio de trabajo
+          router.push(`/workspaces/${data.$id}`);
         },
       }
     );
@@ -160,12 +162,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                 Cancelar
               </Button>
 
-              <Button
-                type="submit"
-                size="lg"
-                onClick={onCancel}
-                disabled={isPending}
-              >
+              <Button type="submit" size="lg" disabled={isPending}>
                 Crear espacio de trabajo
               </Button>
             </div>
