@@ -28,17 +28,23 @@ export const WorkspaceSwitcher = () => {
           <SelectValue placeholder="No se ha seleccionado" />
         </SelectTrigger>
         <SelectContent>
-          {workspaces?.documents.map((workspace) => (
-            <SelectItem key={workspace.$id} value={workspace.$id}>
-              <div className="flex justify-start items-center gap-3 font-medium">
-                <WorkspaceAvatar
-                  name={workspace.name}
-                  image={workspace.imageUrl}
-                />
-                <span className="truncate">{workspace.name}</span>
-              </div>
-            </SelectItem>
-          ))}
+          {workspaces?.documents?.length ? (
+            workspaces?.documents.map((workspace) => (
+              <SelectItem key={workspace.$id} value={workspace.$id}>
+                <div className="flex justify-start items-center gap-3 font-medium">
+                  <WorkspaceAvatar
+                    name={workspace.name}
+                    image={workspace.imageUrl}
+                  />
+                  <span className="truncate">{workspace.name}</span>
+                </div>
+              </SelectItem>
+            ))
+          ) : (
+            <div className="p-2 text-center text-sm text-neutral-500">
+              No se encontraron
+            </div>
+          )}
         </SelectContent>
       </Select>
     </div>
