@@ -4,13 +4,15 @@ import { z } from "zod";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useRef } from "react";
-import { useForm } from "react-hook-form";
+import { SubmitHandler, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+
+import { useWorkspaceId } from "@/features/workspaces/hooks/use-workspace-id";
 
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { createWorkspaceSchema } from "../schemas";
+import { createProjectSchema } from "../schemas";
 import { DottedSeparator } from "@/components/dotted-separator";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
@@ -21,30 +23,36 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { useCreateWorkspace } from "../api/use-create-workspace";
+import { useCreateProject } from "../api/use-create-project";
 import { ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-interface CreateWorkspaceFormProps {
+interface CreateProjectFormProps {
   onCancel?: () => void;
 }
 
-export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
+export const CreateProjectForm = ({ onCancel }: CreateProjectFormProps) => {
+  const workspaceId = useWorkspaceId();
   const router = useRouter();
-  const { mutate, isPending } = useCreateWorkspace();
+  const { mutate, isPending } = useCreateProject();
 
   const inputRef = useRef<HTMLInputElement>(null);
 
-  const form = useForm<z.infer<typeof createWorkspaceSchema>>({
-    resolver: zodResolver(createWorkspaceSchema),
+  const form = useForm<
+    Omit<z.infer<typeof createProjectSchema>, "workspaceId">
+  >({
+    resolver: zodResolver(createProjectSchema.omit({ workspaceId: true })),
     defaultValues: {
       name: "",
     },
   });
 
-  const onSubmit = (values: z.infer<typeof createWorkspaceSchema>) => {
+  const onSubmit: SubmitHandler<
+    Omit<z.infer<typeof createProjectSchema>, "workspaceId">
+  > = (values) => {
     const finalValues = {
       ...values,
+      workspaceId,
       image: values.image instanceof File ? values.image : "",
     };
     console.log(finalValues);
@@ -54,7 +62,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
       {
         onSuccess: ({ data }) => {
           form.reset();
-          router.push(`/workspaces/${data.$id}`);
+          // TODO: Redirect to project screen
         },
       }
     );
@@ -71,7 +79,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
     <Card className="w-full h-full border-none shadow-none">
       <CardHeader className="flex px-7 pb-5 pt-7">
         <CardTitle className="text-xl font-bold">
-          Crea un nuevo espacio de trabajo
+          Crea un nuevo proyecto
         </CardTitle>
       </CardHeader>
       <div className="px-7">
@@ -86,11 +94,11 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                 name="name"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel>Nombre del espacio de trabajo</FormLabel>
+                    <FormLabel>Nombre del proyecto</FormLabel>
                     <FormControl>
                       <Input
                         {...field}
-                        placeholder="Ingresa nombre del espacio de trabajo"
+                        placeholder="Ingresa nombre del proyecto"
                       />
                     </FormControl>
                     <FormMessage />
@@ -124,7 +132,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
                         </Avatar>
                       )}
                       <div className="flex flex-col">
-                        <p className="text-sm">Icono del espacio de trabajo</p>
+                        <p className="text-sm">Icono del proyecto</p>
                         <p className="text-sm text-muted-foreground">
                           JPG, PNG, SVG o JPEG, máximo 1mb
                         </p>
@@ -184,7 +192,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
               </Button>
 
               <Button type="submit" size="lg" disabled={isPending}>
-                Crear espacio de trabajo
+                Crear proyecto
               </Button>
             </div>
           </form>
