@@ -101,6 +101,15 @@ const app = new Hono()
       );
     }
 
+    if (member.role === MemberRole.ADMIN && member.$id === memberToDelete.$id) {
+      return c.json(
+        {
+          error: "No puedes eliminarte a ti mismo porque eres ADMIN",
+        },
+        401
+      );
+    }
+
     if (allMembersInWorkspace.total === 1) {
       return c.json(
         {
