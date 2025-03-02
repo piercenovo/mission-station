@@ -21,12 +21,15 @@ import {
   FormLabel,
   FormMessage,
 } from "@/components/ui/form";
-import { ArrowLeftIcon, ImageIcon } from "lucide-react";
+import { ArrowLeftIcon, CopyIcon, ImageIcon } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Workspace } from "../types";
 import { useUpdateWorkspace } from "../api/use-update-workspace";
 import { useConfirm } from "@/hooks/use-confirm";
 import { useDeleteWorkspace } from "../api/use-delete-workspace";
+import { useResetInviteCode } from "../api/use-reset-invite-code";
+import { toast } from "sonner";
+import { APP_URL } from "@/config";
 
 interface EditWorkspaceFormProps {
   onCancel?: () => void;
@@ -42,11 +45,21 @@ export const EditWorkspaceForm = ({
   const { mutate: deleteWorkspace, isPending: isDeletingWorkspace } =
     useDeleteWorkspace();
 
+  const { mutate: resetInviteCode, isPending: isResettingInviteCode } =
+    useResetInviteCode();
+
   const [DeleteDialog, confirmDelete] = useConfirm(
     "Eliminar espacio de trabajo",
     "Esta acción no se puede deshacer",
     "dangerous",
     "Eliminar"
+  );
+
+  const [ResetDialog, confirmReset] = useConfirm(
+    "Restablecer enlace de invitación",
+    "Esto invalidará el enlace de invitación actual",
+    "destructive",
+    "Restablecer"
   );
 
   const inputRef = useRef<HTMLInputElement>(null);
@@ -72,6 +85,23 @@ export const EditWorkspaceForm = ({
         onSuccess: () => {
           router.push("/");
           window.location.href = "/";
+        },
+      }
+    );
+  };
+
+  const handleResetInviteCode = async () => {
+    const ok = await confirmReset();
+
+    if (!ok) return;
+
+    resetInviteCode(
+      {
+        param: { workspaceId: initialValues.$id },
+      },
+      {
+        onSuccess: () => {
+          router.refresh();
         },
       }
     );
@@ -105,11 +135,22 @@ export const EditWorkspaceForm = ({
     }
   };
 
+  const fullInviteLink = `${APP_URL}/workspaces/${initialValues.$id}/join/${initialValues.inviteCode}`;
+
+  const handleCopyInviteLink = () => {
+    navigator.clipboard
+      .writeText(fullInviteLink)
+      .then(() =>
+        toast.success("Enlace de invitación copiado al portapapeles")
+      );
+  };
+
   return (
     <div className="flex flex-col gap-y-4">
       <DeleteDialog />
+      <ResetDialog />
       <Card className="w-full h-full border-none shadow-none">
-        <CardHeader className="flex flex-row items-center gap-x-4 p-7 space-y-0">
+        <CardHeader className="flex flex-row items-center gap-x-4 px-7 pb-5 pt-7 space-y-0">
           <Button
             size="sm"
             variant="secondary"
@@ -129,7 +170,7 @@ export const EditWorkspaceForm = ({
         <div className="px-7">
           <DottedSeparator />
         </div>
-        <CardContent className="p-7">
+        <CardContent className="px-7 pb-7 pt-5">
           <Form {...form}>
             <form onSubmit={form.handleSubmit(onSubmit)}>
               <div className="flex flex-col gap-y-4">
@@ -248,17 +289,52 @@ export const EditWorkspaceForm = ({
       <Card className="w-full h-full border-none shadow-none">
         <CardContent className="p-7">
           <div className="flex flex-col">
+            <h3 className="font-bold">Invita a miembros</h3>
+            <p className="text-sm text-muted-foreground">
+              Usa el enlace de invitación para agregar miembros a su espacio de
+              trabajo.
+            </p>
+            <div className="mt-4">
+              <div className="flex items-center gap-x-2">
+                <Input disabled value={fullInviteLink} />
+                <Button
+                  onClick={handleCopyInviteLink}
+                  variant="secondary"
+                  className="size-11"
+                >
+                  <CopyIcon className="size-5" />
+                </Button>
+              </div>
+            </div>
+            <DottedSeparator className="pb-2 pt-7" />
+            <Button
+              className="mt-6 w-fit ml-auto"
+              variant="destructive"
+              type="button"
+              disabled={isPending || isResettingInviteCode}
+              onClick={handleResetInviteCode}
+            >
+              Restablecer enlace de invitación
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="w-full h-full border-none shadow-none">
+        <CardContent className="p-7">
+          <div className="flex flex-col">
             <h3 className="font-bold">Zona de peligro</h3>
             <p className="text-sm text-muted-foreground">
               Eliminar un espacio de trabajo es irreversible y eliminará todos
               los datos asociados.
             </p>
+            <DottedSeparator className="pb-2 pt-7" />
+
             <Button
               className="mt-6 w-fit ml-auto"
               variant="dangerous"
               type="button"
-              disabled={isPending}
-              onClick={handleDelete || isDeletingWorkspace}
+              disabled={isPending || isDeletingWorkspace}
+              onClick={handleDelete}
             >
               Eliminar espacio de trabajo
             </Button>
