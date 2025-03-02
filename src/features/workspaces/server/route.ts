@@ -12,9 +12,14 @@ import {
   WORKSPACES_ID,
 } from "@/config";
 
-import { createWorkspaceSchema, updateWorkspaceSchema } from "../schemas";
-import { extractFileIdFromUrl, generateInviteCode } from "@/lib/utils";
+import {
+  createWorkspaceSchema,
+  joinWorkspaceSchema,
+  updateWorkspaceSchema,
+} from "../schemas";
+import { generateInviteCode } from "@/lib/utils";
 import { getMember } from "@/features/members/utils";
+import { Workspace } from "../types";
 
 const app = new Hono()
   .get("/", sessionMiddleware, async (c) => {
@@ -112,7 +117,13 @@ const app = new Hono()
       });
 
       if (!member || member.role != MemberRole.ADMIN) {
-        return c.json({ error: "Unauthorized" }, 401);
+        return c.json(
+          {
+            error:
+              "No tienes los permisos necesarios para realizar esta acción",
+          },
+          401
+        );
       }
 
       let uploadedImageUrl: string | null;
@@ -162,7 +173,12 @@ const app = new Hono()
     });
 
     if (!member || member.role !== MemberRole.ADMIN) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json(
+        {
+          error: "No tienes los permisos necesarios para realizar esta acción",
+        },
+        401
+      );
     }
 
     // TODO: Delete members, projects and tasks
@@ -184,7 +200,12 @@ const app = new Hono()
     });
 
     if (!member || member.role !== MemberRole.ADMIN) {
-      return c.json({ error: "Unauthorized" }, 401);
+      return c.json(
+        {
+          error: "No tienes los permisos necesarios para realizar esta acción",
+        },
+        401
+      );
     }
 
     const workspace = await databases.updateDocument(
@@ -197,6 +218,49 @@ const app = new Hono()
     );
 
     return c.json({ data: workspace });
-  });
+  })
+  .post(
+    "/:workspaceId/join",
+    sessionMiddleware,
+    zValidator("json", joinWorkspaceSchema),
+    async (c) => {
+      const { workspaceId } = c.req.param();
+      const { code } = c.req.valid("json");
+
+      const databases = c.get("databases");
+      const user = c.get("user");
+
+      const member = await getMember({
+        databases,
+        workspaceId,
+        userId: user.$id,
+      });
+
+      if (member) {
+        return c.json(
+          { error: "Ya eres miembro de este espacio de trabajo" },
+          400
+        );
+      }
+
+      const workspace = await databases.getDocument<Workspace>(
+        DATABASE_ID,
+        WORKSPACES_ID,
+        workspaceId
+      );
+
+      if (workspace.inviteCode !== code) {
+        return c.json({ error: "Enlace de invitación inválido" }, 400);
+      }
+
+      await databases.createDocument(DATABASE_ID, MEMBERS_ID, ID.unique(), {
+        workspaceId,
+        userId: user.$id,
+        role: MemberRole.MEMBER,
+      });
+
+      return c.json({ data: workspace });
+    }
+  );
 
 export default app;

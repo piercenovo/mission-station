@@ -266,7 +266,7 @@ export const EditWorkspaceForm = ({
                 />
               </div>
               <DottedSeparator className="py-7" />
-              <div className="flex gap-4 justify-between flex-col sm:flex-row sm:items-center sm:gap-0">
+              <div className="flex gap-3 justify-between flex-col sm:flex-row sm:items-center sm:gap-0">
                 <Button
                   type="button"
                   size="lg"

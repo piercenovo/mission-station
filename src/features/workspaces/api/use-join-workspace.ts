@@ -6,22 +6,23 @@ import { InferRequestType, InferResponseType } from "hono";
 import { client } from "@/lib/rpc";
 
 type ResponseType = InferResponseType<
-  (typeof client.api.workspaces)[":workspaceId"]["reset-invite-code"]["$post"],
+  (typeof client.api.workspaces)[":workspaceId"]["join"]["$post"],
   200
 >;
 type RequestType = InferRequestType<
-  (typeof client.api.workspaces)[":workspaceId"]["reset-invite-code"]["$post"]
+  (typeof client.api.workspaces)[":workspaceId"]["join"]["$post"]
 >;
 
-export const useResetInviteCode = () => {
+export const useJoinWorkspace = () => {
   const queryClient = useQueryClient();
 
   const mutation = useMutation<ResponseType, Error, RequestType>({
-    mutationFn: async ({ param }) => {
-      const response = await client.api.workspaces[":workspaceId"][
-        "reset-invite-code"
-      ]["$post"]({
+    mutationFn: async ({ param, json }) => {
+      const response = await client.api.workspaces[":workspaceId"]["join"][
+        "$post"
+      ]({
         param,
+        json,
       });
 
       const responseData = await response.json();
@@ -31,19 +32,18 @@ export const useResetInviteCode = () => {
         if ("error" in responseData) {
           throw new Error(responseData.error);
         }
-        throw new Error("Error al restablecer el código de invitación");
+        throw new Error("Error al unirse al espacio de trabajo");
       }
+
       return responseData as ResponseType;
     },
     onSuccess: ({ data }) => {
-      toast.success("Código de invitación restablecido");
+      toast.success("Espacio de trabajo unido");
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       queryClient.invalidateQueries({ queryKey: ["workspace", data.$id] });
     },
     onError: (error) => {
-      toast.error(
-        error.message || "Error al restablecer el código de invitación"
-      );
+      toast.error(error.message || "Error al unirse al espacio de trabajo");
     },
   });
 

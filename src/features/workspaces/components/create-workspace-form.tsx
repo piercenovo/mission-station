@@ -71,7 +71,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
 
   return (
     <Card className="w-full h-full border-none shadow-none">
-      <CardHeader className="flex p-7">
+      <CardHeader className="flex px-7 pb-5 pt-7">
         <CardTitle className="text-xl font-bold">
           Crea un nuevo espacio de trabajo
         </CardTitle>
@@ -79,7 +79,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
       <div className="px-7">
         <DottedSeparator />
       </div>
-      <CardContent className="p-7">
+      <CardContent className="px-7 pb-7 pt-5">
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)}>
             <div className="flex flex-col gap-y-4">
@@ -173,7 +173,7 @@ export const CreateWorkspaceForm = ({ onCancel }: CreateWorkspaceFormProps) => {
               />
             </div>
             <DottedSeparator className="py-7" />
-            <div className="flex gap-4 justify-between flex-col sm:flex-row sm:items-center sm:gap-0">
+            <div className="flex gap-3 justify-between flex-col sm:flex-row sm:items-center sm:gap-0">
               <Button
                 type="button"
                 size="lg"

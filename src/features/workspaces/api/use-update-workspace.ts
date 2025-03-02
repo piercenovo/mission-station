@@ -23,19 +23,24 @@ export const useUpdateWorkspace = () => {
         param,
       });
 
+      const responseData = await response.json();
+
       if (!response.ok) {
+        // 🔹 Verificamos si `responseData` tiene la propiedad `error`
+        if ("error" in responseData) {
+          throw new Error(responseData.error);
+        }
         throw new Error("Error al actualizar el espacio de trabajo");
       }
-
-      return await response.json();
+      return responseData as ResponseType;
     },
     onSuccess: ({ data }) => {
       toast.success("Espacio de trabajo actualizado");
       queryClient.invalidateQueries({ queryKey: ["workspaces"] });
       queryClient.invalidateQueries({ queryKey: ["workspace", data.$id] });
     },
-    onError: () => {
-      toast.error("Error al crear el espacio de trabajo");
+    onError: (error) => {
+      toast.error(error.message || "Error al actualizar el espacio de trabajo");
     },
   });
 

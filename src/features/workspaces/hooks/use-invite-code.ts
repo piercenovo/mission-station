@@ -1,6 +1,6 @@
 import { useParams } from "next/navigation";
 
-export const useWorkspaceId = () => {
+export const useInviteCode = () => {
   const paramas = useParams();
-  return paramas.workspaceId as string;
+  return paramas.inviteCode as string;
 };
